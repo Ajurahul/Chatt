@@ -71,7 +71,9 @@ public class Register extends AppCompatActivity {
                     pd.dismiss();
                     Toast.makeText(Register.this, "registration successful", Toast.LENGTH_LONG).show();
                     ref.child(name).child("password").setValue(pass);
-
+                   username.setText("");
+                   password.setText("");
+                   userid.setText("");
                 }
             }
         });
