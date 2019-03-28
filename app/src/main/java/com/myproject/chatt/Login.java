@@ -1,12 +1,15 @@
 package com.myproject.chatt;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,8 +40,10 @@ public class Login extends AppCompatActivity {
     EditText username, password;
     Button loginButton;
     String user, pass;
+    private CheckBox checkBox;
     private FirebaseAuth firebaseAuth;
-    Firebase reference1;
+    public static final String SHARED_PREFS = "sharedPrefs";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,12 +51,12 @@ public class Login extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         Firebase.setAndroidContext(this);
         setContentView(R.layout.login);
-
+            loadData();
             registerUser = (TextView)findViewById(R.id.register);
             username = (EditText)findViewById(R.id.username);
             password = (EditText)findViewById(R.id.password);
             loginButton = (Button)findViewById(R.id.loginButton);
-
+            checkBox = (CheckBox)findViewById(R.id.checkBoxRememberMe);
             registerUser.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -94,6 +99,9 @@ public class Login extends AppCompatActivity {
                                             UserDetails.username = user;
                                             UserDetails.password = pass;
                                             startActivity(new Intent(Login.this, MainActivity.class));
+                                            if(checkBox.isChecked()){
+                                                saveUserData(user,pass);
+                                            }
                                             username.setText("");
                                             password.setText("");
                                         } else {
@@ -134,6 +142,30 @@ public class Login extends AppCompatActivity {
             });
 
 
+    }
+
+    private void loadData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        String User1=sharedPreferences.getString("Username","");
+        String Pass=sharedPreferences.getString("Password","");
+            if(User1.isEmpty()){
+
+            }
+            else {
+                UserDetails.username = User1;
+                UserDetails.password = Pass;
+                finish();
+                startActivity(new Intent(Login.this, MainActivity.class));
+            }
+
+    }
+
+    private void saveUserData(String user, String pass) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("Username", user);
+        editor.putString("Password", pass);
+        editor.commit();
     }
 
 }

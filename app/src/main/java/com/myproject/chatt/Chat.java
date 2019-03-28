@@ -1,6 +1,8 @@
 package com.myproject.chatt;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
@@ -32,7 +34,8 @@ public class Chat extends AppCompatActivity {
     ImageView sendButton;
     EditText messageArea;
     ScrollView scrollView;
-    Firebase reference1,reference2;
+    public static final String SHARED_PREFS = "sharedPrefs";
+    Firebase reference1,reference2,reference3;
 
 
     @Override
@@ -47,6 +50,10 @@ public class Chat extends AppCompatActivity {
             FirebaseAuth.getInstance().signOut();
             finish();
             startActivity(new Intent(Chat.this, Login.class));
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.commit();
             Toast.makeText(Chat.this, "Logged off safely", Toast.LENGTH_LONG).show();
             UserDetails.username="";
 
@@ -62,15 +69,15 @@ public class Chat extends AppCompatActivity {
 
 
         layout = (LinearLayout) findViewById(R.id.layout1);
-        layout_2 = (RelativeLayout)findViewById(R.id.layout2);
-        sendButton = (ImageView)findViewById(R.id.sendButton);
-        messageArea = (EditText)findViewById(R.id.messageArea);
-        scrollView = (ScrollView)findViewById(R.id.scrollView);
+        layout_2 = (RelativeLayout) findViewById(R.id.layout2);
+        sendButton = (ImageView) findViewById(R.id.sendButton);
+        messageArea = (EditText) findViewById(R.id.messageArea);
+        scrollView = (ScrollView) findViewById(R.id.scrollView);
 
         Firebase.setAndroidContext(this);
-        reference1 = new Firebase("https://chatt-96d88.firebaseio.com/messages/"+ UserDetails.username + "_" + UserDetails.chatWith);
+        reference1 = new Firebase("https://chatt-96d88.firebaseio.com/messages/" + UserDetails.username + "_" + UserDetails.chatWith);
         reference2 = new Firebase("https://chatt-96d88.firebaseio.com/messages/" + UserDetails.chatWith + "_" + UserDetails.username);
-
+        reference3 = new Firebase("https://chatt-96d88.firebaseio.com/messages/group");
 
 
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -78,17 +85,57 @@ public class Chat extends AppCompatActivity {
             public void onClick(View v) {
                 String messageText = messageArea.getText().toString().trim();
 
-                if(!messageText.equals("")){
+                if (!messageText.equals("")) {
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("message", messageText);
                     map.put("user", UserDetails.username);
-                    reference1.push().setValue(map);
-                    reference2.push().setValue(map);
-                    messageArea.setText("");
+                    if (UserDetails.chatWith.equals("group")) {
+                        reference3.push().setValue(map);
+                    } else {
+                        reference1.push().setValue(map);
+                        reference2.push().setValue(map);
+                        messageArea.setText("");
+                    }
                 }
             }
         });
+        if (UserDetails.chatWith.equals("group")) {
+            reference3.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    Map map = dataSnapshot.getValue(Map.class);
+                    String message = map.get("message").toString().trim();
+                    String userName = map.get("user").toString().trim();
 
+                    if (userName.equals(UserDetails.username)) {
+                        addMessageBox("You:-\n" + message, 1);
+                    } else {
+                        addMessageBox(userName + ":-\n" + message, 2);
+                    }
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+        }
+        else{
         reference1.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -96,11 +143,10 @@ public class Chat extends AppCompatActivity {
                 String message = map.get("message").toString().trim();
                 String userName = map.get("user").toString().trim();
 
-                if(userName.equals(UserDetails.username)){
+                if (userName.equals(UserDetails.username)) {
                     addMessageBox("You:-\n" + message, 1);
-                }
-                else{
-                    addMessageBox(userName+ ":-\n" + message, 2);
+                } else {
+                    addMessageBox(userName + ":-\n" + message, 2);
                 }
             }
 
@@ -124,6 +170,7 @@ public class Chat extends AppCompatActivity {
 
             }
         });
+    }
     }
 
 

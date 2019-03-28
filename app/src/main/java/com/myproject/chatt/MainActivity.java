@@ -2,6 +2,7 @@ package com.myproject.chatt;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -32,11 +33,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     ListView usersList;
-    TextView noUsersText;
+    TextView noUsersText,group;
     ArrayList<String> al = new ArrayList<>();
     int totalUsers = 0;
     ProgressDialog pd;
-
+    public static final String SHARED_PREFS = "sharedPrefs";
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -50,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
             finish();
             startActivity(new Intent(MainActivity.this, Login.class));
             Toast.makeText(MainActivity.this, "Logged off safely", Toast.LENGTH_LONG).show();
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.commit();
             UserDetails.username="";
 
         }
@@ -61,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
+        group = (TextView)findViewById(R.id.group);
         usersList = (ListView)findViewById(R.id.usersList);
         noUsersText = (TextView)findViewById(R.id.noUsersText);
 
@@ -93,6 +98,15 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, Chat.class));
             }
         });
+
+        group.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UserDetails.chatWith="group";
+                startActivity(new Intent(MainActivity.this, Chat.class));
+            }
+        });
+
     }
 
     public void doOnSuccess(String s){
